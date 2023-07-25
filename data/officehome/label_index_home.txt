@@ -1,0 +1,86 @@
+Eraser 0
+Marker 1
+Candles 2
+Batteries 3
+Calendar 4
+Helmet 5
+Screwdriver 6
+Keyboard 7
+Couch 8
+Shelf 9
+Printer 10
+File_Cabinet 11
+Exit_Sign 12
+Soda 13
+Table 14
+Pencil 15
+Sink 16
+Sneakers 17
+Spoon 18
+Pen 19
+Ruler 20
+Fan 21
+Flipflops 22
+Kettle 23
+Clipboards 24
+Calculator 25
+Knives 26
+Toys 27
+Hammer 28
+Curtains 29
+Laptop 30
+Paper_Clip 31
+Mop 32
+Webcam 33
+Alarm_Clock 34
+Bed 35
+Bucket 36
+Flowers 37
+Mug 38
+Oven 39
+Postit_Notes 40
+Radio 41
+Speaker 42
+Lamp_Shade 43
+Mouse 44
+Glasses 45
+Trash_Can 46
+Backpack 47
+Desk_Lamp 48
+Computer 49
+Notebook 50
+Refrigerator 51
+Folder 52
+ToothBrush 53
+TV 54
+Push_Pin 55
+Drill 56
+Pan 57
+Bottle 58
+Fork 59
+Scissors 60
+Chair 61
+Monitor 62
+Bike 63
+Telephone 64
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
