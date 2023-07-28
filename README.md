@@ -4,7 +4,7 @@ This is the implementation of " Adversarial Source Generation for Source-Free Do
 ## Installation
 * Clone this repository.
 ```bash
-git clone --
+git clone https://github.com/MFAaaaaaa/ASOGE.git
 ```
 ## Datasets
 * Please manually download the datasets [Office-31](https://drive.google.com/file/d/0B4IapRTv9pJ1WGZVd1VDMmhwdlE/view), [Office-Home](https://drive.google.com/file/d/0B81rNlvomiwed0V1YUxQdC1uOTg/view), [VisDA-C](https://github.com/VisionLearningGroup/taskcv-2017-public/tree/master/classification) from the official websites, and modify the path of images in ``` ./dataset ```
