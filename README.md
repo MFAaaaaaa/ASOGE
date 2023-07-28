@@ -5,15 +5,13 @@ This is the implementation of " Adversarial Source Generation for Source-Free Do
 
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
 ```bash
-pip install foobar
-```
-## Usage
-
-```python
-import foobar
-
-# returns 'words'
+python train_source --gpu 0 --data_root ./dataset/VISDA-C/train --label_file ./data/visda_synthesis_9_1_split.pkl
 ```
 ## Datasets
-
+* Please manually download the datasets Office, Office-Home, VisDA-C from the official websites, and modify the path of images in ``` ./dataset ```
 ## Prerequisites
+
+## Training
+```
+fsfsfs
+```
