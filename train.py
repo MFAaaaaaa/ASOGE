@@ -80,7 +80,6 @@ class Trainer(object):
         _, predict = torch.max(all_output, 1)
         accuracy = torch.sum(torch.squeeze(predict).float() == all_label).item() / float(all_label.size()[0])
         mean_ent = torch.mean(self.Entropy(nn.Softmax(dim=1)(all_output))).cpu().data.item()
-        # print(accuracy, "************")
         # matrix = confusion_matrix(all_label, torch.squeeze(predict).float())
         # acc = matrix.diagonal() / matrix.sum(axis=1) * 100
         # aacc = acc.mean()
@@ -208,11 +207,8 @@ class Trainer(object):
         # only train the extractor
         optimizer = optim.SGD(model_params + contrastor_para, momentum=momentum,
                               weight_decay=weight_decay)
-        # optimizer = optim.SGD(model_params + contrastor_para, momentum=momentum,
-        #                       weight_decay=weight_decay)
         optimizer_g = optim.SGD(generator.parameters(), lr=self.lr, momentum=momentum, weight_decay=weight_decay)
 
-        # loss_gen_ce = CrossEntropyLabelSmooth(num_classes=31)
         loss_gen_ce = torch.nn.CrossEntropyLoss()
         if cuda:
             source_net = source_net.cuda()
@@ -237,9 +233,6 @@ class Trainer(object):
         half = n_epoch // 2
         for epoch in range(n_epoch):
 
-            # right = 0
-            # trueLabel = []
-            # pesudoLabel = []
             generator.train()
             source_net.train()
             fea_contrastor.train()
@@ -252,21 +245,17 @@ class Trainer(object):
                 # 加载target feature
                 data_target_train = data_train_iter.next()  # 8
                 t_img, t_label, t_indx = data_target_train
-                # office31需要下面两行
                 t_label = np.array(t_label).astype(int)
                 t_label = torch.from_numpy(t_label)  # 64
-
-                # tlist = t_label.numpy().tolist()
-                # trueLabel = trueLabel + tlist
 
                 if cuda:
                     t_img = t_img.cuda()
                     t_label = t_label.cuda()
 
-                toutputs, tfeatures = source_net(t_img)  # tfeatures (128,2048)  toutputs (128,31)
+                toutputs, tfeatures = source_net(t_img)  
                 reflect_fea = fea_contrastor(tfeatures)
 
-                dis = -torch.mm(tfeatures.detach(), mem_fea.t())  # (128,996)
+                dis = -torch.mm(tfeatures.detach(), mem_fea.t())  
                 for di in range(dis.size(0)):
                     dis[di, t_indx[di]] = torch.max(dis)
                 _, p1 = torch.sort(dis, dim=1)
@@ -275,7 +264,7 @@ class Trainer(object):
                 for wi in range(w.size(0)):
                     for wj in range(5):
                         w[wi][p1[wi, wj]] = 0.2
-                #
+                
                 weight_, ppred = torch.max(w.mm(mem_cls), 1)  # tensor 64
 
                 tfeatures_high = torch.Tensor([]).cuda()
@@ -285,8 +274,6 @@ class Trainer(object):
                         tfeatures_high = torch.cat((tfeatures_high, tfeatures[m].unsqueeze(0)))
                         ppred_high = torch.cat((ppred_high, ppred[m].unsqueeze(0)))
 
-                # plist = ppred.cpu().numpy().tolist()
-                # pesudoLabel = pesudoLabel + plist
                 #####################
                 # generation    #####
                 #####################
@@ -301,7 +288,6 @@ class Trainer(object):
                 images_g_ref = fea_contrastor(images_g)
                 # One hot loss
                 loss_one_hot = loss_gen_ce(output_teacher_batch, labels)
-                # loss_em = self.loss_entropy(output_teacher_batch).cuda()
 
                 if ppred_high.size(0) >= 2:
                     reflect_high = fea_contrastor(tfeatures_high)
@@ -318,7 +304,6 @@ class Trainer(object):
                                                            feature_q_idx=idx, co_fea=images_g_ref[idx].cuda())
                         result = self.cosine_similarity(images_g_ref[idx].unsqueeze(0), pairs4q)
 
-                        # images[idx].unsqueeze(0) : Tenosr[1,2048],不升维就是Tensor[2048]，无法计算相似度。 result (1,12)
                         numerator = torch.exp((result[0][0]) / gamma)
                         denominator = numerator + torch.sum(torch.exp((result / gamma)[0][1:]))
                         # log
@@ -326,16 +311,10 @@ class Trainer(object):
                         # nll_loss
                         contrastive_loss = nll(result, contrastive_label)
 
-                        # contrastive_loss = self.criterion(result, contrastive_label)
                         total_contrastive_loss = total_contrastive_loss + contrastive_loss
                     total_contrastive_loss = total_contrastive_loss / images_g.size(0)
                 else:
                     total_contrastive_loss = torch.tensor(0.).cuda()
-
-                # if epoch >= 10:
-                #     loss_em = self.loss_entropy(output_teacher_batch).cuda()
-                # else:
-                #     loss_em = torch.tensor(0.).cuda()
 
                 # loss of Generator
                 optimizer_g.zero_grad()
@@ -348,13 +327,8 @@ class Trainer(object):
 
                 # adaptation
                 # learning rate decay
-                # optimizer = self.exp_lr_scheduler(optimizer=optimizer,
-                #                                   step=current_step)
                 optimizer.zero_grad()
-                # z_ad = Variable(torch.rand(batch_size_g, 100)).cuda()
-                # labels_ad = Variable(torch.randint(0, num_cls, (batch_size_g,))).cuda()
-                # z_ad = z_ad.contiguous()
-                # labels_ad = labels_ad.contiguous()
+
                 generator.eval()
                 images_ad = generator(z, labels)
 
@@ -389,25 +363,8 @@ class Trainer(object):
                         total_contrastive_loss_ad = total_contrastive_loss_ad + contrastive_loss_ad
                     total_contrastive_loss_ad = total_contrastive_loss_ad / len(all_in)
 
-                # softmax_out = nn.Softmax(dim=1)(toutputs)
-                # loss_emin = torch.mean(self.Entropy(softmax_out))
-                # msoftmax_out = softmax_out.mean(dim=0)
-                # loss_gemin = torch.sum(-msoftmax_out * torch.log(msoftmax_out + 0.00001))
-                # loss_emin -= loss_gemin
-                # loss_im = loss_emin
-
 
                 loss_ce_ad = 0.3 * loss_gen_ce(toutputs, ppred)
-                #     loss = total_contrastive_loss_ad + loss_ce_ad
-                # else:
-                #     loss = total_contrastive_loss_ad
-                # loss_em_ad = self.loss_entropy(toutputs).cuda()
-                # rho = math.floor((100 - epoch - 1) / 10) / 10
-                # rho = math.floor((n_epoch * 2 - epoch - 6) / (n_epoch * 2) * 10) / 10
-                # rho = round(1 - ((epoch + 5) // 5) * 0.1, 1)
-                # rho = ((epoch + half) // n_epoch + 1) * 0.1
-
-                # loss = (1 - rho) * total_contrastive_loss_ad + rho * loss_ce_ad
                 loss = total_contrastive_loss_ad + loss_ce_ad
 
                 # loss = total_contrastive_loss_ad
@@ -428,24 +385,12 @@ class Trainer(object):
                 i += 1
                 current_step += 1
 
-            # for i in range(len(trueLabel)):
-            #     if trueLabel[i] == pesudoLabel[i]:
-            #         right = right + 1
-            # accPesudo = right / len(trueLabel) * 100
             self.logger.info('epoch: %d' % epoch)
-            # print("rho:", rho)
-            # self.logger.info('accPseudo: %.03f' % accPesudo)
-            # print('Loss_ce_g: ', loss_one_hot)
-            # print("loss_ce_g: %f " % loss_one_hot)
-            # print("loss_ad_g: %f" % (-total_contrastive_loss))
+
             self.logger.info('loss_G: %f' % loss_G)
-            # print('Loss_ce_ad: ', loss_ce_ad)
-            # print("loss_ce_ad: %f "% loss_ce_ad)
             self.logger.info('loss: %f' % loss)
             accu, ac_list = self.val_pclass(source_net, test_loader)
-            # self.writer.add_scalar('test_acc', accu,
-            #                        global_step=current_step)
-            # self.logger.info(ac_list)
+
             if accu >= best_acc:
                 self.logger.info('saving the best model!')
                 torch.save(source_net,
