@@ -24,7 +24,7 @@ def arg_parser():
                         help='reduce LR by 0.1 when the current epoch is in this list')
     parser.add_argument('--max_epoch', default=100, type=int)
 
-    parser.add_argument('--data_root', default='./dataset/VISDA-C/train', type=str)
+    parser.add_argument('--data', default='./dataset/VISDA-C/train', type=str)
     parser.add_argument('--label_file', default='./data/visda_synthesis_9_1_split.pkl', type=str)
 
     args = parser.parse_args()
