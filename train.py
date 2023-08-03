@@ -318,7 +318,6 @@ class Trainer(object):
 
                 # loss of Generator
                 optimizer_g.zero_grad()
-                # loss_G = loss_one_hot + loss_em - total_contrastive_loss
                 loss_G = loss_one_hot - total_contrastive_loss
 
                 loss_G.backward(retain_graph=True)
@@ -366,8 +365,6 @@ class Trainer(object):
 
                 loss_ce_ad = 0.3 * loss_gen_ce(toutputs, ppred)
                 loss = total_contrastive_loss_ad + loss_ce_ad
-
-                # loss = total_contrastive_loss_ad
                 loss.backward()
                 self.exp_lr_scheduler(optimizer=optimizer, init_lr=self.lr, cur_epoch=epoch, args=self.args)
                 optimizer.step()
