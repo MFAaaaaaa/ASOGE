@@ -36,40 +36,16 @@ class contrastor(nn.Module):
         super(contrastor, self).__init__()
         self.shared_encoder_pred_domain = nn.Sequential()
         self.shared_encoder_pred_domain.add_module('d_se6', nn.Linear(in_features=2048, out_features=2048))
-        # self.shared_encoder_pred_domain.add_module('bn', nn.BatchNorm1d(2048))
         self.shared_encoder_pred_domain.add_module('relu_se6', nn.ReLU())
 
-        # classify two domain
         # self.shared_encoder_pred_domain.add_module('d_se7', nn.Linear(in_features=1024, out_features=512))
         # self.shared_encoder_pred_domain.add_module('relu_se7', nn.LeakyReLU())
         self.shared_encoder_pred_domain.add_module('d_se8', nn.Linear(in_features=2048, out_features=output_size))
-        # self.shared_encoder_pred_domain.add_module('bn2', nn.BatchNorm1d(output_size))
-
+        
     def forward(self, input_data):
         reflect_vec = self.shared_encoder_pred_domain(input_data)
 
         return reflect_vec
-
-
-class projector(nn.Module):
-    def __init__(self):
-        super(projector, self).__init__()
-
-        self.mlp = nn.Sequential()
-        self.mlp.add_module('Linear', nn.Linear(in_features=2048, out_features=2048))
-        self.mlp.add_module('BN', nn.BatchNorm1d(2048))
-        self.mlp.add_module('relu', nn.ReLU())
-        self.mlp.add_module('Linear', nn.Linear(in_features=2048, out_features=2048))
-        self.mlp.add_module('BN', nn.BatchNorm1d(2048))
-        self.mlp.add_module('relu', nn.ReLU())
-        self.mlp.add_module('BN', nn.BatchNorm1d(2048))
-
-
-    def forward(self, input_fea):
-        reflect = self.mlp(input_fea)
-
-        return reflect
-
 
 class LinearAverage(nn.Module):
     def __init__(self, inputSize, outputSize, T=0.05, momentum=0.0):
