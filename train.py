@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.nn import DataParallel
 from torchvision import transforms
 
-from model_compat import Classifier, generator_fea_deconv, contrastor, LinearAverage
+from model_utils import Classifier, generator_fea_deconv, contrastor, LinearAverage
 from dataset import officeDataset_target
 # from test import val_pclass
 from utils import log, entropy_loss, infoNCE, infoNCE_g, gentropy_loss, CrossEntropyLabelSmooth
