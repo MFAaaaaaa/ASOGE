@@ -1,7 +1,7 @@
 # Adversarial Source Generation for Source-Free Domain Adaptation
 This is the implementation of " Adversarial Source Generation for Source-Free Domain Adaptation ".
 ## Framework
-![image](https://github.com/MFAaaaaaa/ASOGE/blob/master/frame/frame.png)
+![image](https://github.com/MFAaaaaaa/ASOGE/blob/master/frame/frame.pdf)
 ## Installation
 * Clone this repository.
 ```bash
