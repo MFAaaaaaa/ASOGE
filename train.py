@@ -54,7 +54,24 @@ class Trainer(object):
                 param_group['lr'] = init_lr
             else:
                 param_group['lr'] = cur_lr
+                
+    def mixup_data(self, x, y, alpha=1.0, use_cuda=True):
+        '''Returns mixed inputs, pairs of targets, and lambda'''
+        if alpha > 0:
+            lam = np.random.beta(alpha, alpha)
+        else:
+            lam = 1
 
+        batch_size_m = x.size()[0]
+        if use_cuda:
+            index = torch.randperm(batch_size_m).cuda()
+        else:
+            index = torch.randperm(batch_size_m)
+
+        mixed_x = lam * x + (1 - lam) * x[index, :]
+        y_a, y_b = y, y[index]
+        return mixed_x, y_a, y_b, lam
+    
     def val_pclass(self, net, test_loader):
         net.eval()
         start_test = True
@@ -267,13 +284,6 @@ class Trainer(object):
                 
                 weight_, ppred = torch.max(w.mm(mem_cls), 1)  # tensor 64
 
-                tfeatures_high = torch.Tensor([]).cuda()
-                ppred_high = torch.Tensor([]).cuda()
-                for m in range(weight_.size(0)):
-                    if weight_[m] >= 0.5:
-                        tfeatures_high = torch.cat((tfeatures_high, tfeatures[m].unsqueeze(0)))
-                        ppred_high = torch.cat((ppred_high, ppred[m].unsqueeze(0)))
-
                 #####################
                 # generation    #####
                 #####################
@@ -289,32 +299,27 @@ class Trainer(object):
                 # One hot loss
                 loss_one_hot = loss_gen_ce(output_teacher_batch, labels)
 
-                if ppred_high.size(0) >= 2:
-                    reflect_high = fea_contrastor(tfeatures_high)
-                    # contrastive loss
-                    total_contrastive_loss = torch.tensor(0.).cuda()
-                    contrastive_label = torch.tensor([0]).cuda()
-                    # MarginNCE
-                    margin = 0.5
-                    gamma = 1
-                    nll = nn.NLLLoss()
-                    # if len(all_in_g) > 0:
-                    for idx in range(images_g.size(0)):
-                        pairs4q = self.gen_c.get_posAndneg(features=reflect_high, labels=ppred_high, tgt_label=labels,
+
+                # contrastive loss
+                total_contrastive_loss = torch.tensor(0.).cuda()
+                contrastive_label = torch.tensor([0]).cuda()
+                # NCE
+                gamma = 1
+                nll = nn.NLLLoss()
+    
+                for idx in range(images_g.size(0)):
+                    pairs4q = self.gen_c.get_posAndneg(features=reflect_features, labels=ppred, tgt_label=labels,
                                                            feature_q_idx=idx, co_fea=images_g_ref[idx].cuda())
-                        result = self.cosine_similarity(images_g_ref[idx].unsqueeze(0), pairs4q)
+                    result = self.cosine_similarity(images_g_ref[idx].unsqueeze(0), pairs4q)
 
-                        numerator = torch.exp((result[0][0]) / gamma)
-                        denominator = numerator + torch.sum(torch.exp((result / gamma)[0][1:]))
-                        # log
-                        result = torch.log(numerator / denominator).unsqueeze(0).unsqueeze(0)
-                        # nll_loss
-                        contrastive_loss = nll(result, contrastive_label)
-
-                        total_contrastive_loss = total_contrastive_loss + contrastive_loss
-                    total_contrastive_loss = total_contrastive_loss / images_g.size(0)
-                else:
-                    total_contrastive_loss = torch.tensor(0.).cuda()
+                    numerator = torch.exp((result[0][0]) / gamma)
+                    denominator = numerator + torch.sum(torch.exp((result / gamma)[0][1:]))
+                    # log
+                    result = torch.log(numerator / denominator).unsqueeze(0).unsqueeze(0)
+                    # nll_loss
+                    contrastive_loss = nll(result, contrastive_label)
+                    total_contrastive_loss = total_contrastive_loss + contrastive_loss
+                total_contrastive_loss = total_contrastive_loss / images_g.size(0)
 
                 # loss of Generator
                 optimizer_g.zero_grad()
@@ -362,8 +367,11 @@ class Trainer(object):
                         total_contrastive_loss_ad = total_contrastive_loss_ad + contrastive_loss_ad
                     total_contrastive_loss_ad = total_contrastive_loss_ad / len(all_in)
 
-
-                loss_ce_ad = 0.3 * loss_gen_ce(toutputs, ppred)
+                tfeatures_m, ppred_a, ppred_b, lam = self.mixup_data(tfeatures, ppred, self.alpha, True)
+                tfeatures_m, ppred_a, ppred_b = map(Variable, (tfeatures, ppred_a, ppred_b))
+                loss_ce_ad = 0.9 * (lam * loss_gen_ce(toutputs, ppred_a) + (1 - lam) * loss_gen_ce(
+                        toutputs, ppred_b))
+                
                 loss = total_contrastive_loss_ad + loss_ce_ad
                 loss.backward()
                 self.exp_lr_scheduler(optimizer=optimizer, init_lr=self.lr, cur_epoch=epoch, args=self.args)
