@@ -369,7 +369,7 @@ class Trainer(object):
 
                 tfeatures_m, ppred_a, ppred_b, lam = self.mixup_data(tfeatures, ppred, self.alpha, True)
                 tfeatures_m, ppred_a, ppred_b = map(Variable, (tfeatures, ppred_a, ppred_b))
-                toutput_m = source_classifier(tfeatures_m)
+                toutputs_m = source_classifier(tfeatures_m)
                 loss_ce_ad = 0.9 * (lam * loss_gen_ce(toutputs_m, ppred_a) + (1 - lam) * loss_gen_ce(
                         toutputs_m, ppred_b))
                 
